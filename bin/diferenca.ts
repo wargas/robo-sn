@@ -21,11 +21,11 @@ crawlerDiferenca.events.on('competencia:start', (item: any, competencia) => {
 }) 
 
 crawlerDiferenca.events.on('start', (item: any) => {
-    progress.increment(1, { ...item, competencia: '-' })
+    progress.increment(0, { ...item, competencia: '' })
 })
 
 crawlerDiferenca.events.on('done', (item: any) => {
-    progress.increment(0, { competencia: '-' })
+    progress.increment(1, { competencia: '' })
 })
 
 crawlerDiferenca.events.on('fail', (item: any) => {

@@ -1,7 +1,7 @@
 export const domDataDiferenca = (im: string) => {
     //escrituracaoFiscalAdminForm:abaEspelhoSimplesNacionalForm:dataTableEspelhoSimplesNacional
     const trs = document.querySelectorAll('#escrituracaoFiscalAdminForm\\:abaEspelhoSimplesNacionalForm\\:dataTableEspelhoSimplesNacional tfoot tr td')
-    const competencia = String(document.querySelector<HTMLInputElement>('#escrituracaoFiscalAdminForm\\:j_id665 input')?.value || '')
+    const competencia = String(document.querySelector<HTMLInputElement>('#escrituracaoFiscalAdminForm\\:abasDiv input')?.value || '')
         .padStart(7, "0")
         .replace(/(\d+)\/(\d+)/, "$2-$1")
 

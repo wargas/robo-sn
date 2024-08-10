@@ -6,6 +6,12 @@
     "@types/bun": "latest",
     "@types/cli-progress": "^3.11.6"
   },
+  "scripts": {
+    "pgdas": "bun bin/pgdas.ts",
+    "excel": "bun bin/excel.ts",
+    "diferenca": "bun bin/diferenca.ts",
+    "teste": "bun bin/teste.ts"
+  },
   "peerDependencies": {
     "typescript": "^5.5.4"
   },

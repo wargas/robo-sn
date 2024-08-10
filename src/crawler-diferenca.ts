@@ -1,9 +1,9 @@
 import EventEmitter from "eventemitter3";
+import { domDataCompetencia } from "./dom/data-competencia";
 import { domDataDiferenca } from "./dom/data-diferenca";
 import { FillEscrituracaoCompetencias } from "./dom/fill-escrituracao-competencias";
 import { Crawler } from "./libs/Crawler";
 import { range } from "./libs/Helper";
-import { domDataCompetencia } from "./dom/data-competencia";
 import { DiferencaRepository } from "./repositories/diferenca.repository";
 
 export class CrawlerDiferenca {
@@ -108,7 +108,7 @@ export class CrawlerDiferenca {
             this.events.emit('fail', item)
         } finally {
             // this.crawler?.close()
-            this.events.emit('done', item)
+            // this.events.emit('done', item)
         }
     }
 }
