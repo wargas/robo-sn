@@ -1,8 +1,13 @@
-import { PgdasRepository } from "../src/repositories/pgdas.repository";
 
-await PgdasRepository.createOne({
-    id: 'wargas',
-    num_declaracao: '123'
+import { Database } from "../src/libs/database";
+
+const db = Database.factory()
+
+db.on('query', (q) => {
+    console.log(q.sql)
 })
 
-console.log('fim')
+const db2 = Database.factory()
+
+
+// console.log(db.ref(''))

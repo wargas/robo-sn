@@ -5,7 +5,6 @@ import { Queue } from '../src/libs/Queue';
 import { DataRepository } from "../src/repositories/data.repository";
 import { PgdasRepository } from '../src/repositories/pgdas.repository';
 
-
 const items = await DataRepository.findAll()
 
 const queueCrawler = Queue.factory()

@@ -16,7 +16,6 @@ const args = parseArgs({
     allowPositionals: true
 })
 
-
 const workbook = new Workbook()
 await workbook.xlsx.readFile(`./modelos/relatorio.xlsx`)
 
