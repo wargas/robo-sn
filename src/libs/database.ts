@@ -5,9 +5,10 @@ export class Database {
         return knex({
             client: 'sqlite3',
             connection: {
-                filename: './prisma/db.sqlite'
+                filename: './database/db.sqlite'
             },
-            useNullAsDefault: true
+            useNullAsDefault: true,
+            
         })
     }
 }

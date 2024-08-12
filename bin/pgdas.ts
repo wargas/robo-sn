@@ -30,6 +30,7 @@ PGDAS.events.on('done', (item: any) => {
 const errors:string[] = []
 
 async function enqueueCrawler(item: any, retry = 0) {
+    
     queueCrawler.push(async () => {
 
         try {

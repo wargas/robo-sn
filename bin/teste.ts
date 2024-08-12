@@ -1,13 +1,8 @@
-
-import { Database } from "../src/libs/database";
-
-const db = Database.factory()
-
-db.on('query', (q) => {
-    console.log(q.sql)
+const reqs:string[] = []
+const serve = Bun.serve({
+    fetch(req, server) {
+        reqs.push(Math.random().toString())
+        console.log('ok')
+        return new Response(JSON.stringify(reqs), { status: 200})
+    }
 })
-
-const db2 = Database.factory()
-
-
-// console.log(db.ref(''))
