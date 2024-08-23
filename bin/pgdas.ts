@@ -5,86 +5,74 @@ import { Queue } from '../src/libs/Queue';
 import { DataRepository } from "../src/repositories/data.repository";
 import { PgdasRepository } from '../src/repositories/pgdas.repository';
 
-//19:56
-
 const items = await DataRepository.findAll()
 
-const queueInsert = Queue.factory()
 const queueCrawler = Queue.factory()
 const crawler = await Crawler.factory()
 
-
 const PGDAS = new CrawlerPgdas(crawler)
 
-const progress = Progress.multi('{title}       | {bar} {percentage}% | {value}/{total} ')
-
-const progressCrawler = progress.create(0, 0, {title: 'obtendo'})
-const progressInsert = progress.create(0, 0, {title: 'salvando'})
+const progress = Progress.factory('{bar} {percentage}% | {value}/{total} | {duration_formatted}')
 
 PGDAS.events.on('year:start', (cnpj, ano) => {
-    progressCrawler.increment(1, { cnpj, ano })
+
+    progress.increment(1, { cnpj, ano })
 })
 
 PGDAS.events.on('year:end', (cnpj, ano) => {
-    progressCrawler.increment(0, { cnpj, ano })
+    progress.increment(0, { cnpj, ano })
 })
 
 PGDAS.events.on('done', (item: any) => {
-    progressCrawler.increment(0, { inscricao: item.CPBS.toString().padStart(7, '0') })
+    progress.increment(0, { inscricao: item.CPBS.toString().padStart(7, '0') })
 })
 
-async function enqueueCrawler(item: any) {
+const errors:string[] = []
+
+async function enqueueCrawler(item: any, retry = 0) {
+    
     queueCrawler.push(async () => {
 
         try {
-            const data = await PGDAS.process(item)
+            const data = (await PGDAS.process(item)) || []
 
-            if (data) {
-
-                data.forEach(i => {
-                    enqueueInsert({
+            if (data.length > 0) {
+                await PgdasRepository.createMany(data.map(i => {
+                    return {
                         ...i,
                         data_transmissao: new Date(i.data_transmissao).toISOString(),
                         id: `${item.CPBS}.${i.num_declaracao}`,
                         inscricao: item.CPBS.toString().padStart(7, '')
-                    })
-                    progressInsert.setTotal(progressInsert.getTotal() + 1)
-                })
-
+                    }
+                }))
             }
+
         } catch (error) {
-            enqueueCrawler(item)
+            if(retry < 2) {
+                enqueueCrawler(item, retry + 1)
+            } else {
+                errors.push(item.CPBS.toString().padStart(7, ''))
+            }
         }
     })
-}
-
-async function enqueueInsert(data: any) {
-   
-    queueInsert.push(async() => {
-        try {
-            await PgdasRepository.createOne(data)
-            progressInsert.increment(1)
-
-        } catch (error:any) {
-            
-            Bun.write('./error-insert', JSON.stringify(data))
-            // enqueueInsert(data)
-        }
-    })
-
-   
 }
 
 
 for await (let item of items) {
-    if(items.indexOf(item) > 110) {
+    // if(items.indexOf(item) <= 3)
         await enqueueCrawler(item)
-    }
 }
 
+queueCrawler.push(() => {
+    progress.stop()
+    console.log(`finalizado com ${errors.length} erros\n`)
+    if(errors.length > 0) {
+        console.log(errors.join(", "))
+    }
+})
 
 
-progressCrawler.setTotal(queueCrawler.length * 5)
+progress.start((queueCrawler.length-1) * 5, 0)
 
 
 

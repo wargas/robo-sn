@@ -1,5 +1,6 @@
 export function domDataCompetencia() {
-    const div = document.querySelector<HTMLInputElement>('#escrituracaoFiscalAdminForm\\:j_id665 input')
+    const div = document
+        .querySelector<HTMLInputElement>('#escrituracaoFiscalAdminForm\\:abasDiv input')
 
     if(div) {
         return div.value;

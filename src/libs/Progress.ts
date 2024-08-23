@@ -4,7 +4,8 @@ export class Progress {
 
     static factory(format: string, ) {
         return new SingleBar({
-            format
+            format,
+            
         }, Presets.shades_grey)
     }
 
