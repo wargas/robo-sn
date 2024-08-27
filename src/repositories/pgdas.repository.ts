@@ -8,7 +8,7 @@ export class PgdasRepository {
         const database = Database.factory()
 
         return (await database.table('pgdas')
-            .where('data_transmissao', '>=', '2024-08-09')
+            // .where('data_transmissao', '>=', '2024-08-09')
             .groupBy('inscricao').select('inscricao')).map(i => i.inscricao)
     }
 

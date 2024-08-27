@@ -61,9 +61,6 @@ export class CrawlerDiferenca {
                         
                         
                         if (newCompetencia != oldCompetencia) {
-
-                            
-                           
                             this.events.emit('competencia:start', item, newCompetencia)
                             break;
                         }
@@ -98,7 +95,7 @@ export class CrawlerDiferenca {
 
                     await DiferencaRepository.upsert(data)
                    
-
+                    this.events.emit('competencia:stop', item)
                 }
             }
 

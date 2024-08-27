@@ -11,7 +11,7 @@
     "pgdas": "bun bin/pgdas.ts",
     "excel": "bun bin/excel.ts",
     "diferenca": "bun bin/diferenca.ts",
-    "teste": "bun --hot bin/teste.ts"
+    "teste": "bun bin/teste.ts"
   },
   "peerDependencies": {
     "typescript": "^5.5.4"

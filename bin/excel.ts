@@ -57,6 +57,8 @@ function insertData(name: string, items:any[]) {
 
 }
 
+// process.send()
+
 insertData('Todos', data);
 
 const fileName = `diferenca-${new Date().toJSON().split("T")[0]}.xlsx`
@@ -64,3 +66,4 @@ const fileName = `diferenca-${new Date().toJSON().split("T")[0]}.xlsx`
 console.time('Tempo de Execução')
 await workbook.xlsx.writeFile(path.join(args.values.outDir || '', fileName))
 console.timeEnd('Tempo de Execução')
+process.exit(0)
