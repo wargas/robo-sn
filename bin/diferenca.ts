@@ -1,3 +1,4 @@
+import prompts from "prompts";
 import { CrawlerDiferenca } from "../src/crawler-diferenca";
 import { Crawler } from "../src/libs/Crawler";
 import { Progress } from '../src/libs/Progress';
@@ -5,14 +6,19 @@ import { Queue } from '../src/libs/Queue';
 import { DataRepository } from '../src/repositories/data.repository';
 import { PgdasRepository } from '../src/repositories/pgdas.repository';
 
-//04:45
+const { start } = await prompts([{
+    type: 'date',
+    message: 'Informe o início',
+    name: 'start',
+    mask: 'DD/MM/YYYY'
+}])
 
 const progress = Progress.factory('[{value}/{total}] {bar} | {percentage}% | {duration_formatted} | {CPBS} | {competencia}')
 const crawler = await Crawler.factory()
 const crawlerDiferenca = new CrawlerDiferenca(crawler)
 const queue = Queue.factory()
 
-const inscricoes = await PgdasRepository.getInscricoes()
+const inscricoes = await PgdasRepository.getInscricoes(start)
 
 const data = await DataRepository.getFromInscricoes(inscricoes)
 
@@ -41,7 +47,7 @@ crawlerDiferenca.events.on('fail', (item: any) => {
 })
 
 for await (let item of data) {
-    queue.push(async()=> {
+    queue.push(async () => {
         await crawlerDiferenca.process(item)
     })
 }
