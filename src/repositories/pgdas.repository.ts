@@ -1,5 +1,5 @@
-import { Database } from "../libs/database"
 import { format } from 'date-fns'
+import { Database } from "../libs/database"
 
 type Pgdas = any
 
@@ -9,11 +9,7 @@ export class PgdasRepository {
         const database = Database.factory()
 
         return (await database.table('pgdas')
-<<<<<<< HEAD
-            // .where('data_transmissao', '>=', '2024-08-09')
-=======
             .where('data_transmissao', '>=', format(start, 'yyyy-MM-dd'))
->>>>>>> 2e3024e00f490fe4e1d4c81ef44863c0812b6818
             .groupBy('inscricao').select('inscricao')).map(i => i.inscricao)
     }
 
