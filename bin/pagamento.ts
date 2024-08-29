@@ -1,71 +1,52 @@
+import { CrawlerPagamento } from "../src/crawler-pagamento";
 import { Crawler } from "../src/libs/Crawler";
-import { Paginate } from "../src/libs/Paginate";
+import { Progress } from "../src/libs/Progress";
+import { Queue } from "../src/libs/Queue";
+import { DataRepository } from "../src/repositories/data.repository";
 
 const crawler = await Crawler.factory();
+const progress = Progress.factory("[{value}/{total}] {bar} | {percentage}% | {duration_formatted}")
+const queue = Queue.factory()
 
-await crawler.goto('https://issadmin.sefin.fortaleza.ce.gov.br/grpfor/pages/simplesNacional/relatorios/declaracaoPagamentoSNA.seam');
+const crawlerPagamento = CrawlerPagamento.factory(crawler)
 
-await crawler.type('#pesquisaForm\\:searchFilter\\:inscricaoDec\\:inscricao', '2911086')
+const data = await DataRepository.findAll();
 
-await crawler.evaluate(() => {
-    const inputStart = document.getElementById('pesquisaForm:searchFilter:competenciaInicial:competenciaInicialDtInputDate') as HTMLInputElement
+const errors: string[] = []
 
-    if (inputStart) {
-        inputStart.value = "07/2019"
-    }
-
-    const inputEnd = document.getElementById('pesquisaForm:searchFilter:competenciaFinal:competenciaFinalDtInputDate') as HTMLInputElement
-
-    if (inputStart) {
-        inputEnd.value = "12/2023"
-    }
-
-
+crawlerPagamento.events.on('done', (i) => {
+    // console.log(i)
+    progress.increment(1)
 })
 
-await crawler.click('[value="Emitir Relatório"]')
+crawlerPagamento.events.on('error', (i) => {
+    // console.log(i)
+    errors.push(i)
+    progress.increment(1)
+})
 
-await crawler.waitForSelector('.rich-datascr-act,.rich-datascr-inact')
 
+progress.start(data.length, 0)
+// const semregistro = [{ CPBS: '2448688' }, { CPBS: '2260891' }];
 
-
-const paginate = new Paginate(crawler)
-
-const pages = await paginate.getPages();
-
-const items = [];
-
-for await (let page of pages) {
-    await paginate.gotTo(page);
-    await Bun.sleep(200);
-    const data = await crawler.evaluate(() => {
-        return Array.from(document.querySelectorAll('#pesquisaForm\\:dataTable tbody tr'))
-            .map(row => {
-                const tds = row.querySelectorAll('td')
-                return {
-                    competencia: tds[0].textContent,
-                    sinac: tds[1].textContent,
-                    receita_bruta: tds[2].textContent,
-                    rec_serv_iss_fora: tds[3].textContent,
-                    rec_serv_iss_fortal: tds[4].textContent,
-                    bc_iss_retido: tds[5].textContent,
-                    iss_fixo_serv_contabeis: tds[6].textContent,
-                    bc_iss_proprio: tds[7].textContent,
-                    iss_devido: tds[8].textContent,
-                    iss_recolhido: tds[9].textContent,
-                    iss_parcelado: tds[10].textContent,
-                    situacao_parcelamento: tds[11].textContent,
-                    diferenca: tds[12].textContent,
-                }
-            })
+//226089-1 sem registro
+for await (let item of data) {
+    queue.push(async () => {
+        await crawlerPagamento.process(item.CPBS);
     })
-
-    items.push(...data)
-
 }
 
-await Bun.write('result.json', JSON.stringify(items))
+queue.push(() => {
+    progress.stop();
 
-process.exit(0)
+    if(errors.length > 0) {
+        console.log(`Erros em ${errors.join(", ")}`)
+    } else {
+        console.log(`\nConcluído com ${errors.length} erros`)
+    }
+    process.exit(0)
+})
 
-//#pesquisaForm:searchFilter:competenciaInicial:competenciaInicialDtInputDate
+
+progress.start(queue.length - 1, 0)
+// queue.start()

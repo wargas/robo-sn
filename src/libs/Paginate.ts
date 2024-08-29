@@ -14,6 +14,7 @@ export class Paginate {
             return true;
         }
 
+
         const hasNext = await this.crawler.evaluate((prevPage: number, page: string) => {
             const nextPage = Array.from(document.querySelectorAll<HTMLAnchorElement>('.rich-datascr-act,.rich-datascr-inact'))
                 .find(p => p.textContent == String(page));
