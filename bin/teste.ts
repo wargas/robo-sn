@@ -1,8 +1,9 @@
-const reqs:string[] = []
-const serve = Bun.serve({
-    fetch(req, server) {
-        reqs.push(Math.random().toString())
-        console.log('ok')
-        return new Response(JSON.stringify(reqs), { status: 200})
-    }
-})
+import { CrawlerOs } from "../src/crawler-os";
+import { Crawler } from "../src/libs/Crawler";
+
+const crawler = new Crawler()
+await crawler.connect()
+
+const crawlerOs = new CrawlerOs(crawler)
+
+await crawlerOs.all()

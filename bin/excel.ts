@@ -3,6 +3,13 @@ import path from 'path';
 import { parseArgs } from 'util';
 import { columns } from "../src/config/relatorio-columns";
 import { Database } from "../src/libs/database";
+import prompts from "prompts";
+
+const { todos } = await prompts({
+    type: 'confirm',
+    message: 'Deseja incluir todos os registros?',
+    name: 'todos'
+})
 
 const args = parseArgs({
     args: Bun.argv,
@@ -19,14 +26,30 @@ const args = parseArgs({
 const workbook = new Workbook()
 await workbook.xlsx.readFile(`./modelos/relatorio.xlsx`)
 
-const data = await Database.factory()
+const query = Database.factory()
     .table('relatorio')
     .orderBy('Seq', 'asc');
 
-function insertData(name: string, items:any[]) {
+var data:any[];
+let fileName = ''
+if(!todos) {
+    fileName = `diferenca-${new Date().toJSON().split("T")[0]}.xlsx`
+    data = await query.whereIn('inscricao', function () {
+        this.select('inscricao')
+        .from('pgdas_update')
+        .groupBy('inscricao')
+        .where('ultima', '>=', '2024-07-01')
+    });
+} else {
+    fileName = `diferenca-${new Date().toJSON().split("T")[0]}-todos.xlsx`
+    data = await query;
+}
+
+
+function insertData(name: string, items: any[]) {
     const worksheet = workbook.getWorksheet(name)
 
-    if(!worksheet) {
+    if (!worksheet) {
         return;
     }
 
@@ -59,10 +82,9 @@ function insertData(name: string, items:any[]) {
 
 insertData('Todos', data);
 
-const fileName = `diferenca-${new Date().toJSON().split("T")[0]}.xlsx`
+
 
 console.time('Tempo de Execução')
 await workbook.xlsx.writeFile(path.join(args.values.outDir || '', fileName))
 console.timeEnd('Tempo de Execução')
-
 process.exit(0)
