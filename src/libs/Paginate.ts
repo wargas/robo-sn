@@ -14,6 +14,7 @@ export class Paginate {
             return true;
         }
 
+
         const hasNext = await this.crawler.evaluate((prevPage: number, page: string) => {
             const nextPage = Array.from(document.querySelectorAll<HTMLAnchorElement>('.rich-datascr-act,.rich-datascr-inact'))
                 .find(p => p.textContent == String(page));
@@ -50,9 +51,47 @@ export class Paginate {
     }
 
     async getPages(): Promise<string[]> {
+        await this.crawler.waitForSelector('.rich-datascr-act,.rich-datascr-inact')
         return this.crawler.evaluate(() => {
             return Array.from(document.querySelectorAll<HTMLAnchorElement>('.rich-datascr-act,.rich-datascr-inact'))
                 .map(p => p.textContent)
+        })
+    }
+
+    async isLast() {
+        await this.crawler.waitForSelector('.rich-datascr-act,.rich-datascr-inact')
+
+        return this.crawler.evaluate(() => {
+
+            const btns = Array.from(document.querySelectorAll('.rich-datascr-button'));
+            const last = btns[btns.length - 1]
+
+            return last.classList.contains('rich-datascr-button-dsbld')
+        })
+    }
+
+    async forEach(func: (page: number) => Promise<void>) {
+
+        return new Promise(async (a) => {
+
+            await this.gotTo(1)
+
+            while (true) {
+                const curr = await this.currentPage()
+
+                await func(curr)
+
+
+                const isLast = await this.isLast()
+
+                if (isLast) {
+                    break;
+                }
+
+                await this.gotTo(curr + 1)
+            }
+
+            a(true)
         })
     }
 
