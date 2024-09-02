@@ -100,12 +100,11 @@ export class CrawlerDiferenca {
             }
 
             this.events.emit('done', item)
+            return true;
         } catch (error) {
             console.log(error)
             this.events.emit('fail', item)
-        } finally {
-            // this.crawler?.close()
-            // this.events.emit('done', item)
-        }
+            return false
+        } 
     }
 }

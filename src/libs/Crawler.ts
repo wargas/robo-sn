@@ -14,12 +14,13 @@ export class Crawler extends EventEmitter {
                 browserURL: 'http://127.0.0.1:9222/json',
                 defaultViewport: null
             }) 
-            
+
+                      
             this.emit(`browser:connected`, this.browser)
             this.page = await this.browser.newPage()
             this.emit(`browser:newPage`, this.page)
         } catch(e) {
-            console.log('error ao connecctar')
+            console.log(e)
         }
     }
 

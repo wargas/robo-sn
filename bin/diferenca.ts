@@ -1,5 +1,6 @@
 import prompts from "prompts";
 import { CrawlerDiferenca } from "../src/crawler-diferenca";
+import { Controller } from "../src/libs/controller";
 import { Crawler } from "../src/libs/Crawler";
 import { Progress } from '../src/libs/Progress';
 import { Queue } from '../src/libs/Queue';
@@ -26,35 +27,44 @@ progress.increment(0, { CPBS: '', competencia: '' })
 
 crawlerDiferenca.events.on('competencia:start', (item: any, competencia) => {
     progress.increment(0, { ...item, competencia })
-}) 
+})
 
 crawlerDiferenca.events.on('start', (item: any) => {
     progress.increment(0, { ...item, competencia: '' })
 })
 
 crawlerDiferenca.events.on('competencia:stop', (item: any) => {
-    progress.increment(1, { competencia: '' })
-})
-
-crawlerDiferenca.events.on('done', (item: any) => {
     progress.increment(0, { competencia: '' })
 })
 
+crawlerDiferenca.events.on('done', async(item: any) => {
+    await Controller.add(item.CPBS)
+    progress.increment(1, { competencia: '' })
+})
+
+const errors: string[] = []
+
 crawlerDiferenca.events.on('fail', (item: any) => {
-    // queue.push(async()=> {
-    //     await crawlerDiferenca.process(item)
-    // })
+
+    errors.push(item.CPBS)
+
 })
 
 for await (let item of data) {
-    queue.push(async () => {
-        await crawlerDiferenca.process(item)
-    })
+    const processado = await Controller.has(item.CPBS)
+
+    if (!processado) {
+        queue.push(async () => {
+            await crawlerDiferenca.process(item)
+        })
+    }
 }
 
 queue.push(() => {
+    console.log(`finalizado\nErrors: ${errors.join('\n')}`)
     progress.stop()
+    process.exit(0)
 })
 
-progress.start(54*(queue.length-1), 0)
+progress.start(queue.length - 1, 0)
 

@@ -66,6 +66,7 @@ web_modules/
 # TypeScript cache
 
 *.tsbuildinfo
+controle.txt
 
 *.xlsx
 # Optional npm cache directory
