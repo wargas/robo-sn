@@ -8,7 +8,7 @@ export class Crawler extends EventEmitter {
     browser: Browser = {} as Browser;
     page: Page = {} as Page;
 
-    static tempFolder = join(__dirname, '..', 'temp')
+    static tempFolder = join(__dirname, '../../', 'temp')
 
     async connect() {
         try {
