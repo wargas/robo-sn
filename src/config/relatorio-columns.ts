@@ -12,6 +12,7 @@ export const columns: Partial<Column>[] =  [
     { key: "iss_nfe", header: "ISS NFS", width: 10 },
     { key: "iss_pgdas", header: "ISS PGDAS", width: 10 },
     { key: "iss_diferenca", header: "DIFERENÇA ISS", width: 10 },
+    { key: "diferenca_anterior", header: "DIFERENÇA INICIAL", width: 10 },
     { key: "Auditor", header: "AUDITOR", width: 10 },
     { key: "Planejamento", header: "PLANEJAMENTO", width: 13 },
     { key: "ULTIMA_PGDAS", header: "ÚLTIMO PGDASD", width: 11 },

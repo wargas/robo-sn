@@ -5,6 +5,7 @@ import { DataRepository } from "../src/repositories/data.repository";
 const crawler = await Crawler.factory();
 const crawlerPagamento = CrawlerPagamento.factory(crawler)
 
+
 const data = await DataRepository.findAll();
 
 const errors: string[] = []
@@ -30,7 +31,7 @@ for await (let item of data) {
 crawlerPagamento.queue.push(() => {
     crawlerPagamento.progress.stop();
 
-    if(errors.length > 0) {
+    if (errors.length > 0) {
         console.log(`Erros em ${errors.join(", ")}`)
     } else {
         console.log(`\nConcluído com ${errors.length} erros`)

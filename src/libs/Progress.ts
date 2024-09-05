@@ -1,12 +1,14 @@
-import { MultiBar, Presets, SingleBar } from 'cli-progress'
+import { MultiBar, Presets, SingleBar } from 'cli-progress';
 
 export class Progress {
 
     static factory(format: string, ) {
-        return new SingleBar({
+        const bar = new SingleBar({
             format,
             
         }, Presets.shades_grey)
+
+        return bar;
     }
 
     static multi(format: string) {
