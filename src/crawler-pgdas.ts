@@ -2,6 +2,7 @@ import EventEmitter from "eventemitter3";
 import { domGetDataPGdas } from "./dom/data-pgdas";
 import { domFillPgdass } from "./dom/fill-pgdas";
 import { Crawler } from "./libs/Crawler";
+import { Work } from "./libs/Work";
 
 type Item = {
     pa: string
@@ -11,11 +12,11 @@ type Item = {
 }
 
 
-export class CrawlerPgdas {
+export class CrawlerPgdas extends Work {
 
-    events = new EventEmitter()
-
-    constructor(private crawler: Crawler) { }
+    constructor(private crawler: Crawler) {
+        super()
+    }
 
     async process(item: any, retry = 0): Promise<Item[] | null> {
         const anos = ['2019', '2020', '2021', '2022', '2023']
@@ -44,7 +45,7 @@ export class CrawlerPgdas {
                         return document.body.innerHTML.includes('Erro ao obter dados')
                     })
 
-                    if(!hasErrorServer) {
+                    if (!hasErrorServer) {
                         break
                     }
 
@@ -62,9 +63,6 @@ export class CrawlerPgdas {
         } catch (error) {
             this.events.emit('fail', cnpj)
             return null;
-        } finally {
-            // this.events.emit('done')
-            // this.crawler?.close()
         }
 
         return data;

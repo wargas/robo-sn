@@ -3,8 +3,9 @@ import type { Crawler } from "./Crawler";
 export class Paginate {
 
     page = 0;
+    // parentSelector = "#pesquisaForm\\:tableContainer"
 
-    constructor(private crawler: Crawler) { }
+    constructor(private crawler: Crawler, private parentSelector = "body") { }
 
 
     async gotTo(page: string | number) {
@@ -15,15 +16,16 @@ export class Paginate {
         }
 
 
-        const hasNext = await this.crawler.evaluate((prevPage: number, page: string) => {
-            const nextPage = Array.from(document.querySelectorAll<HTMLAnchorElement>('.rich-datascr-act,.rich-datascr-inact'))
+        const hasNext = await this.crawler.evaluate((prevPage: number, page: string, parent: string) => {
+            const parentElement = document.querySelector(parent) as HTMLDivElement;
+            const nextPage = Array.from(parentElement.querySelectorAll<HTMLAnchorElement>(`.rich-datascr-act,.rich-datascr-inact`))
                 .find(p => p.textContent == String(page));
             if (nextPage) {
                 nextPage.click()
                 return true;
             }
             return false
-        }, prevPage, page)
+        }, prevPage, page, this.parentSelector)
 
         if (!hasNext) {
             return false;
@@ -42,32 +44,37 @@ export class Paginate {
     }
 
     async currentPage() {
-        await this.crawler.waitForSelector('.rich-datascr-act')
-        return await this.crawler.evaluate(() => {
-            const pageText = document.querySelector('.rich-datascr-act')?.textContent || '0';
+        await this.crawler.waitForSelector(`${this.parentSelector} .rich-datascr-act`)
+        return await this.crawler.evaluate((parent: string) => {
+
+            const parentElement = document.querySelector(parent) as HTMLDivElement;
+            const pageText = parentElement.querySelector(`.rich-datascr-act`)?.textContent || '0';
 
             return parseInt(pageText)
-        })
+        }, this.parentSelector)
     }
 
     async getPages(): Promise<string[]> {
-        await this.crawler.waitForSelector('.rich-datascr-act,.rich-datascr-inact')
-        return this.crawler.evaluate(() => {
-            return Array.from(document.querySelectorAll<HTMLAnchorElement>('.rich-datascr-act,.rich-datascr-inact'))
+        await this.crawler.waitForSelector(`${this.parentSelector} .rich-datascr-act,.rich-datascr-inact`)
+        return this.crawler.evaluate((parent: string) => {
+            const parentElement = document.querySelector(parent) as HTMLDivElement;
+            return Array.from(parentElement.querySelectorAll<HTMLAnchorElement>(`.rich-datascr-act,.rich-datascr-inact`))
                 .map(p => p.textContent)
-        })
+        }, this.parentSelector)
     }
 
     async isLast() {
-        await this.crawler.waitForSelector('.rich-datascr-act,.rich-datascr-inact')
+        await this.crawler.waitForSelector(`${this.parentSelector} .rich-datascr-act,.rich-datascr-inact`)
 
-        return this.crawler.evaluate(() => {
+        return this.crawler.evaluate((parent: string) => {
 
-            const btns = Array.from(document.querySelectorAll('.rich-datascr-button'));
+            const parentElement = document.querySelector(parent) as HTMLDivElement;
+
+            const btns = Array.from(parentElement.querySelectorAll(`.rich-datascr-button`));
             const last = btns[btns.length - 1]
 
-            return last.classList.contains('rich-datascr-button-dsbld')
-        })
+            return last.classList.contains(`rich-datascr-button-dsbld`)
+        }, this.parentSelector)
     }
 
     async forEach(func: (page: number) => Promise<void>) {
@@ -77,12 +84,15 @@ export class Paginate {
             await this.gotTo(1)
 
             while (true) {
+                
                 const curr = await this.currentPage()
+
 
                 await func(curr)
 
 
                 const isLast = await this.isLast()
+
 
                 if (isLast) {
                     break;

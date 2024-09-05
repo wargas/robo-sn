@@ -1,71 +1,52 @@
 import { auditores } from "./config/auditores";
 import type { Crawler } from "./libs/Crawler";
+import { Database } from "./libs/database";
+import { Paginate } from "./libs/Paginate";
+import { Work } from "./libs/Work";
 
-export class CrawlerOs {
+export class CrawlerOs extends Work {
 
-    constructor(private crawler: Crawler) { }
+    constructor(private crawler: Crawler) {
+        super()
+    }
 
     async all() {
-        for await (let auditor of [auditores[5]]) {
-            await this.getIds(auditor)
+        for await (let auditor of auditores) {
+            console.log(auditor.nome)
+            await this.process(auditor)
         }
     }
 
-    async getIds(auditor: typeof auditores[0]) {
+    async process(auditor: typeof auditores[0]) {
         await this.crawler.goto(`https://gefit.sefin.fortaleza.ce.gov.br/gefit/pages/acaoFiscal/consultarOrdemServico.seam?pAuditor=${auditor.id}`)
-        while (true) {
 
-            await this.crawler.waitForSelector('#pesquisaForm\\:dataTable\\:tb')
+        const paginate = new Paginate(this.crawler, "#pesquisaForm\\:tableContainer");
 
-            const oss = await this.crawler.evaluate(() => {
-                const trs = document.querySelectorAll('#pesquisaForm\\:dataTable\\:tb tr')
+        await paginate.forEach(async (p) => {
+            await this.crawler.waitForSelector("#pesquisaForm\\:dataTable\\:tb")
 
-                return Array.from(trs).map((tr) => {
-                    const id = Array.from(tr.querySelectorAll('.menu-icon-link'))
-                        .find(a => ["Detalhar PAF", "Detalhar OS"]
-                            .includes((a.textContent || '').trim()))?.outerHTML
-                        .replace(/\n/g, "")
-                        .replace(/\t/g, "")
-                        .replace(/.*?\?i=([0-9]+)(.*)/, "$1")
-                    const tds = tr.querySelectorAll('td')
+            const items = await this.crawler.evaluate(() => {
+                const rows = document.querySelectorAll("#pesquisaForm\\:dataTable\\:tb tr");
+
+                return Array.from(rows).map(row => {
+                    const cels = row.querySelectorAll("td");
 
                     return {
-                        id,
-                        numero: tds[0].textContent,
-                        paf: tds[2].textContent,
-                        sujeito: tds[3].textContent,
-                        lastEvent: tds[7].textContent
+                        id: cels[9].outerHTML.replace(/\n/g, "").replace(/.*\.seam\?i=(\d+)&.*/, "$1"),
+                        os: cels[0].textContent,
+                        especie: cels[1].textContent,
+                        paf: cels[2].textContent,
+                        cnpj: cels[3]?.textContent?.replace(/(\d+\.\d+\.\d+\/\d+-\d+).*/, "$1").replace(/\D/g, ""),
+                        nome: cels[3]?.textContent?.replace(/(\d+\.\d+\.\d+\/\d+-\d+) - (.*)/, "$2"),
+                        auditor: cels[6].textContent,
+                        evento: cels[7].textContent
                     }
                 })
-
             })
 
-            console.log(oss)
-
-            const hasNext = await this.crawler.evaluate(() => {
-                const pages = Array.from(document.querySelectorAll<HTMLAnchorElement>('.rich-datascr-act,.rich-datascr-inact'))
-                const current = document.querySelector('.rich-datascr-act')?.textContent||'1'
-
-                const nextPage = pages.find(p => p.textContent == current+1)
-
-                if(nextPage) {
-                    nextPage.click()
-                    while(true) {
-                        const current2 = document.querySelector('.rich-datascr-act')
-                        if(current != current2?.textContent) {
-                            break
-                        }
-                    }
-
-                    return true
-                }
-
-                return false
-            })
-
-            if(!hasNext) {
-                break
-            }
-        }
+            await Database.factory().table('ordens')
+                .insert(items)
+                .onConflict('paf').merge()
+        })
     }
 }

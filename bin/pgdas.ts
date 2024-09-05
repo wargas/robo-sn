@@ -7,31 +7,27 @@ import { PgdasRepository } from '../src/repositories/pgdas.repository';
 
 const items = await DataRepository.findAll()
 
-const queueCrawler = Queue.factory()
 const crawler = await Crawler.factory()
 
 const PGDAS = new CrawlerPgdas(crawler)
 
-const progress = Progress.factory('{bar} {percentage}% | {value}/{total} | {duration_formatted}')
-
 PGDAS.events.on('year:start', (cnpj, ano) => {
-
-    progress.increment(1, { cnpj, ano })
+    PGDAS.progress.increment(1, { cnpj, ano })
 })
 
 PGDAS.events.on('year:end', (cnpj, ano) => {
-    progress.increment(0, { cnpj, ano })
+    PGDAS.progress.increment(0, { cnpj, ano })
 })
 
 PGDAS.events.on('done', (item: any) => {
-    progress.increment(0, { inscricao: item.CPBS.toString().padStart(7, '0') })
+    PGDAS.progress.increment(0, { inscricao: item.CPBS.toString().padStart(7, '0') })
 })
 
 const errors:string[] = []
 
 async function enqueueCrawler(item: any, retry = 0) {
     
-    queueCrawler.push(async () => {
+    PGDAS.queue.push(async () => {
 
         try {
             const data = (await PGDAS.process(item)) || []
@@ -59,12 +55,11 @@ async function enqueueCrawler(item: any, retry = 0) {
 
 
 for await (let item of items) {
-    // if(items.indexOf(item) <= 3)
         await enqueueCrawler(item)
 }
 
-queueCrawler.push(() => {
-    progress.stop()
+PGDAS.queue.push(() => {
+    PGDAS.progress.stop()
     console.log(`finalizado com ${errors.length} erros\n`)
     if(errors.length > 0) {
         console.log(errors.join(", "))
@@ -72,7 +67,7 @@ queueCrawler.push(() => {
 })
 
 
-progress.start((queueCrawler.length-1) * 5, 0)
+PGDAS.progress.start((PGDAS.queue.length-1) * 5, 0)
 
 
 

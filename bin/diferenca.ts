@@ -14,10 +14,9 @@ const { start } = await prompts([{
     mask: 'DD/MM/YYYY'
 }])
 
-const progress = Progress.factory('[{value}/{total}] {bar} | {percentage}% | {duration_formatted} | {CPBS} | {competencia}')
+
 const crawler = await Crawler.factory()
 const crawlerDiferenca = new CrawlerDiferenca(crawler)
-const queue = Queue.factory()
 
 const controle = await Controle.getAll()
 
@@ -25,40 +24,38 @@ const inscricoes = await PgdasRepository.getInscricoes(start)
 
 const data = await DataRepository.getFromInscricoes(inscricoes.filter(i => !controle.includes(i)))
 
-progress.increment(0, { CPBS: '', competencia: '' })
+crawlerDiferenca.progress.increment(0, { CPBS: '', competencia: '' })
 
 crawlerDiferenca.events.on('competencia:start', (item: any, competencia) => {
-    progress.increment(0, { ...item, competencia })
+    crawlerDiferenca.progress.increment(0, { ...item, competencia })
 }) 
 
 crawlerDiferenca.events.on('start', (item: any) => {
-    progress.increment(0, { ...item, competencia: '' })
+    crawlerDiferenca.progress.increment(0, { ...item, competencia: '' })
 })
 
 crawlerDiferenca.events.on('competencia:stop', (item: any) => {
-    progress.increment(0, { competencia: '' })
+    crawlerDiferenca.progress.increment(0, { competencia: '' })
 })
 
 crawlerDiferenca.events.on('done', async(item: any) => {
-    progress.increment(1, { competencia: '' })
+    crawlerDiferenca.progress.increment(1, { competencia: '' })
     await Controle.add(item.CPBS);
 })
 
 crawlerDiferenca.events.on('fail', (item: any) => {
-    // queue.push(async()=> {
-    //     await crawlerDiferenca.process(item)
-    // })
+    crawlerDiferenca.progress.increment(1, item)
 })
 
 for await (let item of data) {
-    queue.push(async () => {
+    crawlerDiferenca.queue.push(async () => {
         await crawlerDiferenca.process(item)
     })
 }
 
-queue.push(() => {
-    progress.stop()
+crawlerDiferenca.queue.push(() => {
+    crawlerDiferenca.progress.stop()
 })
 
-progress.start(queue.length-1, 0)
+crawlerDiferenca.progress.start(crawlerDiferenca.queue.length-1, 0)
 

@@ -7,6 +7,7 @@
     "@types/bun": "latest",
     "@types/cli-progress": "^3.11.6",
     "@types/eventemitter3": "^2.0.2",
+    "@types/lodash": "^4.17.7",
     "@types/prompts": "^2.4.9"
   },
   "scripts": {
@@ -24,6 +25,7 @@
     "eventemitter3": "^5.0.1",
     "exceljs": "^4.4.0",
     "knex": "^3.1.0",
+    "lodash": "^4.17.21",
     "prompts": "^2.4.2",
     "puppeteer-core": "^23.2.0",
     "queue": "^7.0.0",

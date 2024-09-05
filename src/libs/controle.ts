@@ -1,17 +1,17 @@
 export class Controle {
     static async add(i: string) {
-        const file = Bun.file('../done.txt')
+        const file = Bun.file('./controle.txt')
         if (!await file.exists()) {
-            await Bun.write('../done.txt', ``)
+            await Bun.write('./controle.txt', ``)
         }
         const text = await file.text()
         if(!text.includes(i)) {
-            await Bun.write('../done.txt', `${text}${i}\n`)
+            await Bun.write('./controle.txt', `${text}${i}\n`)
         }
     }
 
     static async getAll(): Promise<string[]>{
-        const file = Bun.file('../done.txt')
+        const file = Bun.file('./controle.txt')
         if (!await file.exists()) {
             return [];
         }

@@ -5,10 +5,13 @@ import { FillEscrituracaoCompetencias } from "./dom/fill-escrituracao-competenci
 import { Crawler } from "./libs/Crawler";
 import { range } from "./libs/Helper";
 import { DiferencaRepository } from "./repositories/diferenca.repository";
+import { Work } from "./libs/Work";
 
-export class CrawlerDiferenca {
-    events = new EventEmitter()
-    constructor(private crawler: Crawler) { }
+export class CrawlerDiferenca extends Work {
+    
+    constructor(private crawler: Crawler) { 
+        super()
+    }
 
     async process(item: any) {
         
@@ -105,11 +108,7 @@ export class CrawlerDiferenca {
             console.log(error)
             this.events.emit('fail', item)
             return;
-        } finally {
-            // this.crawler?.close()
-            // this.events.emit('done', item)
-        }
-        return;
+        } 
 
     }
 }
