@@ -12,7 +12,7 @@ export class CrawlerDiferenca extends Work {
 
     constructor(private crawler: Crawler) {
         super()
-    }
+    } 
 
     async process(item: any) {
 
