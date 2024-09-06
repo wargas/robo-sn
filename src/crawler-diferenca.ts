@@ -1,9 +1,6 @@
-import EventEmitter from "eventemitter3";
-import { domDataCompetencia } from "./dom/data-competencia";
 import { domDataDiferenca } from "./dom/data-diferenca";
 import { FillEscrituracaoCompetencias } from "./dom/fill-escrituracao-competencias";
 import { Crawler } from "./libs/Crawler";
-import { range } from "./libs/Helper";
 import { DiferencaRepository } from "./repositories/diferenca.repository";
 import { Work } from "./libs/Work";
 import { Paginate } from "./libs/Paginate";
