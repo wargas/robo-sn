@@ -1,9 +1,8 @@
+import { CrawlerDiferenca } from "../src/crawler-diferenca";
 import { CrawlerOs } from "../src/crawler-os";
 import { Crawler } from "../src/libs/Crawler";
 
-const crawler = await Crawler.factory();
-const crawlerOS = new CrawlerOs(crawler);
+const crawler = await Crawler.factory()
+const crawlerDiferenca = new CrawlerDiferenca(crawler)
 
-await crawlerOS.all();
-
-process.exit(0)
+await crawlerDiferenca.process({CPBS: '2548844'})

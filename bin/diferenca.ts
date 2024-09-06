@@ -1,6 +1,5 @@
 import prompts from "prompts";
 import { CrawlerDiferenca } from "../src/crawler-diferenca";
-import { Controller } from "../src/libs/controller";
 import { Crawler } from "../src/libs/Crawler";
 import { DataRepository } from '../src/repositories/data.repository';
 import { PgdasRepository } from '../src/repositories/pgdas.repository';
@@ -23,6 +22,8 @@ const inscricoes = await PgdasRepository.getInscricoes(start)
 
 const data = await DataRepository.getFromInscricoes(inscricoes.filter(i => !controle.includes(i)))
 
+const errors: string[] = []
+
 crawlerDiferenca.progress.increment(0, { CPBS: '', competencia: '' })
 
 crawlerDiferenca.events.on('competencia:start', (item: any, competencia) => {
@@ -42,14 +43,8 @@ crawlerDiferenca.events.on('done', async(item: any) => {
     await Controle.add(item.CPBS);
 })
 
-crawlerDiferenca.events.on('done', async(item: any) => {
-    await Controller.add(item.CPBS)
-    crawlerDiferenca.progress.increment(1, { competencia: '' })
-})
-
-const errors: string[] = []
-
 crawlerDiferenca.events.on('fail', (item: any) => {
+    errors.push(item.CPBS)
     crawlerDiferenca.progress.increment(1, item)
 })
 
@@ -61,6 +56,8 @@ for await (let item of data) {
 
 crawlerDiferenca.queue.push(() => {
     crawlerDiferenca.progress.stop()
+    console.log(`finalizado com ${errors.length} erros${errors.length ? ` (${errors.join(', ')})` : ''}`)
+    process.exit(0)
 })
 
 crawlerDiferenca.progress.start(crawlerDiferenca.queue.length-1, 0)

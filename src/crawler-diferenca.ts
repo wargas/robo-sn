@@ -6,15 +6,16 @@ import { Crawler } from "./libs/Crawler";
 import { range } from "./libs/Helper";
 import { DiferencaRepository } from "./repositories/diferenca.repository";
 import { Work } from "./libs/Work";
+import { Paginate } from "./libs/Paginate";
 
 export class CrawlerDiferenca extends Work {
-    
-    constructor(private crawler: Crawler) { 
+
+    constructor(private crawler: Crawler) {
         super()
     }
 
     async process(item: any) {
-        
+
         this.events.emit('start', item)
 
         try {
@@ -33,82 +34,49 @@ export class CrawlerDiferenca extends Work {
 
             await this.crawler.waitForSelector('#escrituracaoFiscalAdminForm\\:dataTable\\:tb')
 
-            for await (let page of range(1, 6)) {
-                await this.crawler.click(`.rich-datascr td:nth-child(${page + 3})`)
+            const paginate = new Paginate(this.crawler);
 
-                
-                while (true) {
-                    
-                    const currentPage = await this.crawler.evaluate(() => {
-                        return document.querySelector('.rich-datascr-act')!.textContent
-                    })
+            await paginate.forEach(async p => {
+                const linksCompetencias = await this.crawler.page.$$('#escrituracaoFiscalAdminForm\\:dataTable\\:tb a')
 
-                    if (currentPage == page.toString()) {
-                        break;
-                    }
-                }
+                for await (const link of linksCompetencias) {
+                    link.click()
+                    await this.crawler.waitForSelector('#escrituracaoFiscalAdminForm\\:tabs')
 
-                const items = await this.crawler.page.$$('#escrituracaoFiscalAdminForm\\:dataTable\\:tb a')
+                    const tabIss = await this.crawler.evaluate(() => {
+                        const aba = document.querySelector('#escrituracaoFiscalAdminForm\\:abaEspelhoSimplesNacional_lbl') as HTMLAnchorElement
 
-                
-                for await (const currentItem of items) {
-
-                                       
-                    const oldCompetencia = await this.crawler.evaluate(domDataCompetencia)
-
-                         
-                    currentItem.click()
-
-                    while (true) {
-                        const newCompetencia = await this.crawler.evaluate(domDataCompetencia)
-                        
-                        
-                        if (newCompetencia != oldCompetencia) {
-                            this.events.emit('competencia:start', item, newCompetencia)
-                            break;
+                        if (aba) {
+                            aba.click()
+                            return true
                         }
-
-                       
-                    }
-
-                    
-                    await this.crawler.waitForSelector('#escrituracaoFiscalAdminForm\\:abaEncerramento_lbl')
-
-                    const hasAbaSimples = await this.crawler.evaluate(() => {
-                        const abaSimples = document.getElementById('escrituracaoFiscalAdminForm:abaEspelhoSimplesNacional_lbl')
-
-                        if (abaSimples) {
-                            abaSimples.click()
-                            return true;
-                        }
-
                         return false
-
                     })
 
-                   
-                    if (!hasAbaSimples) {
+
+                    if (!tabIss) {
                         continue;
                     }
 
                     await this.crawler.waitForSelector('#escrituracaoFiscalAdminForm\\:abaEspelhoSimplesNacionalForm\\:dataTableEspelhoSimplesNacional\\:tb')
                     const data = await this.crawler.evaluate(domDataDiferenca, item.CPBS.toString().padStart(7, '0'))
 
-                    // console.log(data)
-
                     await DiferencaRepository.upsert(data)
-                   
+
                     this.events.emit('competencia:stop', item)
+
+                    await this.crawler.evaluate(() => {
+                        document.getElementById('escrituracaoFiscalAdminForm:tabs')?.remove()
+                    })
                 }
-            }
+            })
 
             this.events.emit('done', item)
             return;
         } catch (error) {
-            console.log(error)
             this.events.emit('fail', item)
             return;
-        } 
+        }
 
     }
 }
