@@ -55,7 +55,7 @@ function insertData(name: string, items: any[]) {
 
     worksheet.columns = columns
 
-    worksheet.autoFilter = 'A1:N1'
+    worksheet.autoFilter = 'A1:O1'
 
     items.forEach((item, i) => {
         let dataPgdas: string | Date = '-'

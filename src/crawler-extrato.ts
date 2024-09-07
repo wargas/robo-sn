@@ -32,7 +32,6 @@ export class CrawlerExtratos {
                 (document.getElementById('dataInicialDiv:competenciaInicialInputDate') as HTMLInputElement).value = "07/2019";
                 (document.getElementById('dataFinalDiv:competenciaFinalInputDate') as HTMLInputElement).value = "12/2023";
             })
-
                        
             await this.crawler.click('[value=ANALITICO]')
             await this.crawler.click('[value=PAG_REALIZADOS]')
