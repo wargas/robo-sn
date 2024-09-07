@@ -1,9 +1,16 @@
-import { CrawlerOs } from "../src/crawler-os";
-import { Crawler } from "../src/libs/Crawler";
+import path from 'path';
+import puppeteer from 'puppeteer-core';
 
-const crawler = await Crawler.factory();
-const crawlerOS = new CrawlerOs(crawler);
+const b = await puppeteer.launch({
+    executablePath: path.join('D:\\projetos\\chrome-win\\chrome.exe'),
+    headless: false,
+    debuggingPort: 9223,   
+})
 
-await crawlerOS.all();
+const p = await b.newPage()
 
-process.exit(0)
+await p.goto("https://www.google.com")
+
+const title = await p.title();
+
+console.log(p.content.length)

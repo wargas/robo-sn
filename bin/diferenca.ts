@@ -1,10 +1,9 @@
 import prompts from "prompts";
 import { CrawlerDiferenca } from "../src/crawler-diferenca";
-import { Controller } from "../src/libs/controller";
+import { Controle } from "../src/libs/controle";
 import { Crawler } from "../src/libs/Crawler";
 import { DataRepository } from '../src/repositories/data.repository';
 import { PgdasRepository } from '../src/repositories/pgdas.repository';
-import { Controle } from "../src/libs/controle";
 
 const { start } = await prompts([{
     type: 'date',
@@ -42,14 +41,11 @@ crawlerDiferenca.events.on('done', async(item: any) => {
     await Controle.add(item.CPBS);
 })
 
-crawlerDiferenca.events.on('done', async(item: any) => {
-    await Controller.add(item.CPBS)
-    crawlerDiferenca.progress.increment(1, { competencia: '' })
-})
 
 const errors: string[] = []
 
 crawlerDiferenca.events.on('fail', (item: any) => {
+    errors.push(item.CPBS)
     crawlerDiferenca.progress.increment(1, item)
 })
 
@@ -61,6 +57,8 @@ for await (let item of data) {
 
 crawlerDiferenca.queue.push(() => {
     crawlerDiferenca.progress.stop()
+    console.log(`concluido com ${errors.length}`)
+    process.exit(0)
 })
 
 crawlerDiferenca.progress.start(crawlerDiferenca.queue.length-1, 0)
